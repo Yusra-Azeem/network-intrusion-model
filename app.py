@@ -8,7 +8,7 @@ from flask_cors import CORS
 #  PATH CONFIG
 # ---------------------------
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "../frontend")
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
 app = Flask(__name__, static_folder=FRONTEND_DIR)
 CORS(app)

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Network IDS</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 15px rgba(0,0,0,0.2);
+      width: 400px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #result {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Network IDS Prediction</h2>
+    <input type="text" id="ip" placeholder="IP Address">
+    
+    <select id="protocol_type">
+      <option value="tcp">TCP</option>
+      <option value="udp">UDP</option>
+      <option value="icmp">ICMP</option>
+    </select>
+    
+    <input type="text" id="service" placeholder="Service (e.g., ftp_data)">
+    <input type="text" id="flag" placeholder="Flag (e.g., SF)">
+    <input type="number" id="src_bytes" placeholder="Source Bytes">
+    <input type="number" id="dst_bytes" placeholder="Destination Bytes">
+    
+    <button onclick="predict()">Predict</button>
+    
+    <div id="result"></div>
+  </div>
+
+  <script>
+    async function predict() {
+      const data = {
+        ip: document.getElementById("ip").value,
+        protocol_type: document.getElementById("protocol_type").value,
+        service: document.getElementById("service").value,
+        flag: document.getElementById("flag").value,
+        src_bytes: Number(document.getElementById("src_bytes").value),
+        dst_bytes: Number(document.getElementById("dst_bytes").value)
+      };
+
+      const resultDiv = document.getElementById("result");
+
+      try {
+        const response = await fetch("http://127.0.0.1:5000/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        
+        if(response.status === 403 || result.status === "blocked") {
+          resultDiv.style.background = "#f8d7da";
+          resultDiv.style.color = "#721c24";
+          resultDiv.innerText = `IP Blocked: ${result.reason || "Attack detected"}`;
+        } else if(result.prediction === "attack") {
+          resultDiv.style.background = "#f8d7da";
+          resultDiv.style.color = "#721c24";
+          resultDiv.innerText = `Prediction: ATTACK. Action: ${result.action}`;
+        } else {
+          resultDiv.style.background = "#d4edda";
+          resultDiv.style.color = "#155724";
+          resultDiv.innerText = `Prediction: NORMAL. Action: ${result.action}`;
+        }
+      } catch (err) {
+        resultDiv.style.background = "#fff3cd";
+        resultDiv.style.color = "#856404";
+        resultDiv.innerText = "Error: Could not connect to backend.";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
